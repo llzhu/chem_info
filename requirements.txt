@@ -1,0 +1,5 @@
+altair==4.1.0
+streamlit==0.82.0
+pandas==1.1.0
+Pillow==8.2.0
+rdkit==2009.Q1-1
