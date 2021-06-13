@@ -8,6 +8,7 @@ import streamlit as st
 import base64
 from io import StringIO
 
+st.set_page_config(page_title='SDF Viewer', layout='wide')
 
 def get_df_download_csv(df, download_filename, link_label, structure_column):
     del df[structure_column]
