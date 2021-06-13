@@ -11,7 +11,8 @@ from io import StringIO
 st.set_page_config(page_title='SDF Viewer', layout='wide')
 
 def get_df_download_csv(df, download_filename, link_label, structure_column):
-    del df[structure_column]
+    if structure_column is not None:
+        del df[structure_column]
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
     #href = f'<a href="data:file/csv;base64,{b64}">{link_label}</a>'
@@ -53,6 +54,8 @@ with st.form("date_form"):
         headers = st.sidebar.multiselect('Select headers', all_headers, ['Molecule', 'SMILES'])
         header_rename = st.sidebar.text_area('Rename Headers')
         rename_dict = get_rename_dict(header_rename)
+        show_structure = st.sidebar.checkbox('Show Structure?')
+
     submitted = st.form_submit_button("Display")
     if submitted:
         pass
@@ -68,8 +71,13 @@ if rename_dict and len(rename_dict) > 0:
 else:
     df_upload = df_upload[headers]
 
-
-st.write(df_upload.to_html(escape=False), unsafe_allow_html=True)
-
-st.sidebar.markdown(get_df_download_sdf(df_upload, 'streamlit_download.sdf', 'Download as Sdf!', structure_column), unsafe_allow_html=True)
-st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', structure_column), unsafe_allow_html=True)
+if show_structure:
+    st.write(df_upload.to_html(escape=False), unsafe_allow_html=True)
+else:
+    del df_upload[structure_column]
+    st.dataframe(df_upload)
+if show_structure:
+    st.sidebar.markdown(get_df_download_sdf(df_upload, 'streamlit_download.sdf', 'Download as Sdf!', structure_column), unsafe_allow_html=True)
+    st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', structure_column), unsafe_allow_html=True)
+else:
+    st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', None),unsafe_allow_html=True)
