@@ -7,7 +7,7 @@ from os import path
 import streamlit as st
 import base64
 from io import StringIO
-from tkinter import *
+
 
 STRUCTURE = 'Molecule'
 
