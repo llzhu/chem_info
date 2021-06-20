@@ -1,12 +1,15 @@
 import os
 import io
 import pandas as pd
-from rdkit.Chem import PandasTools
+from rdkit.Chem import PandasTools, Draw
 import os.path
 from os import path
 import streamlit as st
 import base64
 from io import StringIO
+from tkinter import *
+
+STRUCTURE = 'Molecule'
 
 st.set_page_config(page_title='SDF Viewer', layout='wide')
 
@@ -32,7 +35,7 @@ def get_df_download_sdf(df, download_filename, link_label, structure_column):
 
 def get_sdf_df(uploaded_file):
     if uploaded_file is not None:
-        df_upload = PandasTools.LoadSDF(uploaded_file,smilesName='SMILES',molColName='Molecule')
+        df_upload = PandasTools.LoadSDF(uploaded_file,smilesName='SMILES',molColName=STRUCTURE)
         return df_upload
 
 def get_rename_dict(header_rename):
@@ -46,38 +49,36 @@ def get_rename_dict(header_rename):
         return rename_dict
 
 
-with st.form("date_form"):
-    uploaded_file = st.sidebar.file_uploader("Choose a file")
-    if uploaded_file is not None:
-        df_upload = get_sdf_df(uploaded_file)
-        all_headers = list(df_upload.columns.values)
-        headers = st.sidebar.multiselect('Select headers', all_headers, ['Molecule', 'SMILES'])
-        header_rename = st.sidebar.text_area('Rename Headers')
-        rename_dict = get_rename_dict(header_rename)
-        show_structure = st.sidebar.checkbox('Show Structure?')
+uploaded_file = st.sidebar.file_uploader("Choose a file")
+if uploaded_file is not None:
+    df_upload = get_sdf_df(uploaded_file)
+    all_headers = list(df_upload.columns.values)
+    all_headers.remove('ID')
+    all_headers.remove(STRUCTURE)
+    all_headers.insert(0, STRUCTURE)
+    headers = st.sidebar.multiselect('Select headers', all_headers, all_headers)
 
-    submitted = st.form_submit_button("Display")
-    if submitted:
-        pass
+    header_rename = st.sidebar.text_area('Rename Headers')
+    rename_dict = get_rename_dict(header_rename)
+
+    sort_headers = headers.copy()
+    sort_headers.remove(STRUCTURE)
+    # st.write(sort_headers)
+    sort_by = st.sidebar.selectbox('Sort by:', sort_headers)
+
+    if rename_dict and len(rename_dict) > 0:
+        df_upload = df_upload[headers]
+        df_upload = df_upload.rename(columns=rename_dict)
     else:
-        st.stop()
+        df_upload = df_upload[headers]
 
-structure_column = headers[0]
+    if sort_by:
+        df_upload.sort_values(by=sort_by, inplace=True)
 
-if rename_dict and len(rename_dict) > 0:
-    df_upload = df_upload[headers]
-    df_upload = df_upload.rename(columns=rename_dict)
-    structure_column = rename_dict.get(structure_column, structure_column)
-else:
-    df_upload = df_upload[headers]
-
-if show_structure:
     st.write(df_upload.to_html(escape=False), unsafe_allow_html=True)
-else:
-    del df_upload[structure_column]
-    st.dataframe(df_upload)
-if show_structure:
-    st.sidebar.markdown(get_df_download_sdf(df_upload, 'streamlit_download.sdf', 'Download as Sdf!', structure_column), unsafe_allow_html=True)
-    st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', structure_column), unsafe_allow_html=True)
-else:
-    st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', None),unsafe_allow_html=True)
+
+    st.sidebar.markdown(get_df_download_sdf(df_upload, 'streamlit_download.sdf', 'Download as Sdf!', STRUCTURE), unsafe_allow_html=True)
+    st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', STRUCTURE), unsafe_allow_html=True)
+
+secret_string =st.secrets["db_password"]
+st.write("you are not supposed to see the db password:", secret_string)
