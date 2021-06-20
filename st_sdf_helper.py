@@ -81,4 +81,4 @@ if uploaded_file is not None:
     st.sidebar.markdown(get_df_download_csv(df_upload, 'streamlit_download.csv', 'Download as csv!', STRUCTURE), unsafe_allow_html=True)
 
 secret_string =st.secrets["db_password"]
-st.write("you are not supposed to see the db password:", secret_string)
+st.sidebar.write("you are not supposed to see this:", secret_string)
