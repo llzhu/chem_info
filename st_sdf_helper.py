@@ -61,19 +61,20 @@ if uploaded_file is not None:
     header_rename = st.sidebar.text_area('Rename Headers')
     rename_dict = get_rename_dict(header_rename)
 
-    sort_headers = headers.copy()
-    sort_headers.remove(STRUCTURE)
-    # st.write(sort_headers)
-    sort_by = st.sidebar.selectbox('Sort by:', sort_headers)
-
     if rename_dict and len(rename_dict) > 0:
         df_upload = df_upload[headers]
         df_upload = df_upload.rename(columns=rename_dict)
     else:
         df_upload = df_upload[headers]
 
-    if sort_by:
-        df_upload.sort_values(by=sort_by, inplace=True)
+
+    sort_result = st.sidebar.radio('Sort Results?', ['No', 'Ascending', 'Decending'])
+    if sort_result == 'Ascending' or sort_result == 'Decending':
+        sort_headers = headers.copy()
+        sort_headers.remove(STRUCTURE)
+        sort_by = st.sidebar.selectbox('Sort by:', sort_headers)
+        ASCENDING = sort_result == 'Ascending'
+        df_upload.sort_values(by=sort_by, ascending=ASCENDING, inplace=True)
 
     st.write(df_upload.to_html(escape=False), unsafe_allow_html=True)
 
